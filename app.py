@@ -10,6 +10,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'pl
 # initialize the DB
 db = SQLAlchemy(app)
 
+
 @app.route('/')
 def hello_world():
     return 'Hello World'
@@ -17,7 +18,7 @@ def hello_world():
 
 @app.route('/yolo')
 def yolo():
-    return 'You only live once, nigga!'
+    return 'You only live once!'
 
 
 if __name__ == '__main__':
