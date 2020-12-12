@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 import os
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token
 
 
 app = Flask(__name__)
@@ -10,8 +11,14 @@ app = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
 # use Flask's config manager to tell where the DB is located
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'planets.db')
+# configure JWT's secret key
+app.config['JWT_SECRET_KEY'] = 'secret' # change this in production
+
+
 # initialize the DB
 db = SQLAlchemy(app)
+# intialize JWT
+jwt = JWTManager(app)
 
 
 from models import Planet, User, user_schema, users_schema, planet_schema, planets_schema
@@ -104,6 +111,26 @@ def register():
         db.session.add(user)
         db.session.commit()
         return jsonify(message="User created successfully"), 201
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    # check if it's a JSON post
+    if request.is_json:
+        email = request.json['email']
+        password = request.json['password']
+    # Regular form POST
+    else:
+        email = request.form['email']
+        password = request.form['password']
+    # check if email & pwd matched in DB, this is SQLAlchemy
+    test = User.query.filter_by(email=email, password=password).first()
+    if test:
+        # create a JWT access token based of email
+        access_token = create_access_token(identity=email)
+        return jsonify(message='Login Successful', access_token=access_token)
+    else:
+        return jsonify(message="Incorrect email or password"), 401
 
 
 if __name__ == '__main__':
