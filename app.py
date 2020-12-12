@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 import os
 
@@ -14,7 +14,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'pl
 db = SQLAlchemy(app)
 
 
-from models import Planet, User
+from models import Planet, User, user_schema, users_schema, planet_schema, planets_schema
 
 
 # create a custom Flask CLI command to create a DB, using a decorator.
@@ -77,6 +77,15 @@ def hello_world():
 @app.route('/yolo')
 def yolo():
     return 'You only live once!'
+
+
+@app.route('/planets', methods=['GET'])
+def planets():
+    # By SQLAlchemy
+    planets_list = Planet.query.all()
+    # marshmallow's serialization
+    result = planets_schema.dump(planets_list)
+    return jsonify(result)
 
 
 if __name__ == '__main__':
