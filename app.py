@@ -168,5 +168,33 @@ def planets_details(planet_id: int):
         return jsonify(message="No planets found"), 404
 
 
+@app.route('/add-planet', methods=['POST'])
+def add_planet():
+    planet_name = request.form['planet_name']
+    test = Planet.query.filter_by(planet_name=planet_name).first()
+    if test:
+        return jsonify(message='That planet already exists'), 409
+    else:
+        # below line commented since it's already requested above
+        # planet_name = request.form['planet_name']
+        planet_type = request.form['planet_type']
+        home_star = request.form['home_star']
+        mass = request.form['mass']
+        radius = request.form['radius']
+        distance = request.form['distance']
+
+        # SQLAlchemy
+        new_planet = Planet(planet_name=planet_name,
+                            planet_type=planet_type,
+                            home_star=home_star,
+                            mass=mass,
+                            radius=radius,
+                            distance=distance)
+
+        db.session.add(new_planet)
+        db.session.commit()
+        return jsonify(message='You added a planet!'), 201
+
+
 if __name__ == '__main__':
     app.run()
