@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 import os
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token
+from flask_mail import Mail, Message
 
 
 app = Flask(__name__)
@@ -13,12 +14,19 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'planets.db')
 # configure JWT's secret key
 app.config['JWT_SECRET_KEY'] = 'secret' # change this in production
+# Mail configuration setup, using Mailtrap
+app.config['MAIL_SERVER']='smtp.mailtrap.io'
+app.config['MAIL_PORT'] = 2525
+app.config['MAIL_USERNAME'] = 'username-here'
+app.config['MAIL_PASSWORD'] = 'pwd-here'
 
 
 # initialize the DB
 db = SQLAlchemy(app)
-# intialize JWT
+# initialize JWT
 jwt = JWTManager(app)
+# create an instance of Mail
+mail = Mail(app)
 
 
 from models import Planet, User, user_schema, users_schema, planet_schema, planets_schema
@@ -131,6 +139,21 @@ def login():
         return jsonify(message='Login Successful', access_token=access_token)
     else:
         return jsonify(message="Incorrect email or password"), 401
+
+
+@app.route('/retrieve-password/<string:email>', methods=['GET'])
+def retrieve_password(email: str):
+    user = User.query.filter_by(email=email).first()
+    if user:
+        # Message() here is a constructor, used as the body for the email
+        msg = Message("Your password is: " + user.password,
+                      sender="admin@planetapi.com",
+                      recipients=[email])
+        mail.send(msg)
+        return jsonify(message='Password sent to: ' + email)
+    else:
+        return jsonify(message="That email does not exit"), 401
+
 
 
 if __name__ == '__main__':
