@@ -145,7 +145,7 @@ def login():
 def retrieve_password(email: str):
     user = User.query.filter_by(email=email).first()
     if user:
-        # Message() here is a constructor, used as the body for the email
+        # Message() here is a constructor, used to build the email
         msg = Message("Your password is: " + user.password,
                       sender="admin@planetapi.com",
                       recipients=[email])
@@ -154,6 +154,18 @@ def retrieve_password(email: str):
     else:
         return jsonify(message="That email does not exit"), 401
 
+
+@app.route('/planets-details/<int:planet_id>', methods=['GET'])
+def planets_details(planet_id: int):
+    # SQLAlchemy thing below
+    planet = Planet.query.filter_by(planet_id=planet_id).first()
+    if planet:
+        # Marshmallow serialization of data below
+        result = planet_schema.dump(planet)
+        return jsonify(result)
+    else:
+        # no planets found with that id
+        return jsonify(message="No planets found"), 404
 
 
 if __name__ == '__main__':
