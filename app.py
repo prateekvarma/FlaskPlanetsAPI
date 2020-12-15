@@ -216,5 +216,19 @@ def update_planet():
         return jsonify(message="No planet found"), 404
 
 
+# Here we pass the planet_id as a parameter, as it's NOT passed from a form, unlike update function
+@app.route('/delete-planet/<int:planet_id>', methods=['DELETE'])
+@jwt_required
+def delete_planet(planet_id: int):
+    planet = Planet.query.filter_by(planet_id=planet_id).first()
+    if planet:
+        # SQLAlchemy
+        db.session.delete(planet)
+        db.session.commit()
+        return jsonify(message="Planet deleted!"), 202
+    else:
+        return jsonify(message="Planet does not exit"), 404
+
+
 if __name__ == '__main__':
     app.run()
